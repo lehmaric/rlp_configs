@@ -1,0 +1,16 @@
+# ~/.bashrc.local -- machine-specific shell config. NOT tracked in git.
+#
+# The managed ~/.bashrc sources this file last, if it exists. Put anything that
+# should differ per machine or must never be committed here, then:
+#
+#   cp bash/bashrc.local.example ~/.bashrc.local   # then edit for this machine
+#
+# Secrets and tokens:
+# export SOME_API_TOKEN="..."
+
+# SDKMAN (must be initialised at the end of .bashrc; this file is sourced last):
+# export SDKMAN_DIR="$HOME/.sdkman"
+# [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Tools installed at a machine-specific path:
+# export PATH="$PATH:/opt/nvim-linux-x86_64/bin"

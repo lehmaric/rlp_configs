@@ -1,0 +1,6 @@
+# Machine-local, never-tracked shell config (only the .example is committed).
+.bashrc.local
+*.local
+
+# Backups the installer moves aside (these live in $HOME, but guard anyway).
+*.bak-*
