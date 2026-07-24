@@ -14,8 +14,10 @@ cd ~/rlp_configs
 ```
 
 `install` backs up any existing real file (to `<name>.bak-<timestamp>`) before
-linking, and is safe to re-run. It places configs only — it never installs
-packages, but warns if `tmux`, `nvim`, or `git` is missing.
+linking, and is safe to re-run. It links every mapped config whose repo folder
+exists — even an empty one — so files added later show up at the target with no
+re-run. It places configs only: it never installs packages, but warns if
+`tmux`, `nvim`, or `git` is missing.
 
 ```sh
 ./install.sh status      # show what is / isn't linked
@@ -40,11 +42,13 @@ and is sourced last by `.bashrc`:
 cp bash/bashrc.local.example ~/.bashrc.local   # then edit for this machine
 ```
 
-### nvim (not tracked yet)
+### nvim (empty for now)
 
-The `nvim/` folder is an empty placeholder, so `install.sh` skips it. When you
-have a config, move `~/.config/nvim/*` into `nvim/` (commit the plugin lockfile
-too) and re-run `install`.
+`~/.config/nvim` is already symlinked to the repo's `nvim/` folder, which holds
+only a `.gitkeep` placeholder. Add an `init.lua` (and the rest of your config)
+into `nvim/` and it appears at `~/.config/nvim` immediately — no re-run needed.
+Commit the plugin lockfile (e.g. `lazy-lock.json`) too, for reproducible
+plugin versions across machines.
 
 ## Adding a new config (e.g. VSCode later)
 

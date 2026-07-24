@@ -35,15 +35,11 @@ ok()   { printf '%s%s%s\n' "$c_grn" "$*" "$c_reset"; }
 warn() { printf '%s%s%s\n' "$c_yel" "$*" "$c_reset"; }
 err()  { printf '%s%s%s\n' "$c_red" "$*" "$c_reset" >&2; }
 
-# A source has nothing to link if it is missing, or is a directory whose only
-# content is the .gitkeep placeholder (e.g. nvim before a real config exists).
+# A source is linkable as long as its path exists in the repo. An empty folder
+# (e.g. nvim holding only .gitkeep) is still linked, so files added later to it
+# appear at the target immediately without re-running install.
 source_has_content() {
-  local src="$1"
-  [ -e "$src" ] || return 1
-  if [ -d "$src" ]; then
-    [ -n "$(find "$src" -type f ! -name .gitkeep -print -quit)" ] || return 1
-  fi
-  return 0
+  [ -e "$1" ]
 }
 
 check_tools() {
