@@ -8,6 +8,9 @@
 #                            recent backup if one exists
 #   ./install.sh status      show, per config, whether it is linked
 #
+# Optionally name configs (first path part of the source, e.g. tmux, bash,
+# nvim) to act on only those:  ./install.sh install tmux
+#
 # Places configs only. It never installs packages; it warns if a required tool
 # is missing. See CONTEXT.md and docs/adr/ for the design.
 
@@ -28,6 +31,17 @@ MAPPINGS=(
 
 # Tools each config expects. Warned about, never installed.
 REQUIRED_TOOLS=(bash tmux nvim git)
+
+# Configs named on the command line; empty means all.
+SELECTED=()
+
+# True if this mapping row should be acted on.
+selected() {
+  [ "${#SELECTED[@]}" -eq 0 ] && return 0
+  local name="${1%%/*}" s
+  for s in "${SELECTED[@]}"; do [ "$s" = "$name" ] && return 0; done
+  return 1
+}
 
 c_reset=$'\033[0m'; c_grn=$'\033[32m'; c_yel=$'\033[33m'; c_red=$'\033[31m'; c_dim=$'\033[2m'
 info() { printf '%s\n' "$*"; }
@@ -50,7 +64,7 @@ check_tools() {
       missing=1
     fi
   done
-  [ "$missing" -eq 0 ] && info "${c_dim}all required tools present${c_reset}"
+  if [ "$missing" -eq 0 ]; then info "${c_dim}all required tools present${c_reset}"; fi
 }
 
 do_install() {
@@ -58,6 +72,7 @@ do_install() {
   local row src dest abs_src abs_dest
   for row in "${MAPPINGS[@]}"; do
     src="${row%%|*}"; dest="${row##*|}"
+    selected "$src" || continue
     abs_src="$REPO_DIR/$src"; abs_dest="$HOME/$dest"
 
     if ! source_has_content "$abs_src"; then
@@ -87,6 +102,7 @@ do_uninstall() {
   local row src dest abs_src abs_dest
   for row in "${MAPPINGS[@]}"; do
     src="${row%%|*}"; dest="${row##*|}"
+    selected "$src" || continue
     abs_src="$REPO_DIR/$src"; abs_dest="$HOME/$dest"
 
     if [ -L "$abs_dest" ] && [[ "$(readlink -f "$abs_dest")" == "$(readlink -f "$REPO_DIR")"* ]]; then
@@ -109,6 +125,7 @@ do_status() {
   local row src dest abs_src abs_dest
   for row in "${MAPPINGS[@]}"; do
     src="${row%%|*}"; dest="${row##*|}"
+    selected "$src" || continue
     abs_src="$REPO_DIR/$src"; abs_dest="$HOME/$dest"
 
     if ! source_has_content "$abs_src"; then
@@ -123,7 +140,15 @@ do_status() {
   done
 }
 
-case "${1:-}" in
+cmd="${1:-}"; shift || true
+SELECTED=("$@")
+for s in "${SELECTED[@]}"; do
+  found=0
+  for row in "${MAPPINGS[@]}"; do r="${row%%|*}"; [ "${r%%/*}" = "$s" ] && found=1; done
+  [ "$found" -eq 1 ] || { err "unknown config: $s"; exit 1; }
+done
+
+case "$cmd" in
   install)   do_install ;;
   uninstall) do_uninstall ;;
   status)    do_status ;;
@@ -131,11 +156,13 @@ case "${1:-}" in
     cat <<EOF
 rlp_configs installer
 
-usage: $0 {install|uninstall|status}
+usage: $0 {install|uninstall|status} [config...]
 
   install    symlink managed configs into \$HOME (existing files are backed up)
   uninstall  remove our symlinks and restore the most recent backup
   status     report whether each config is linked
+
+  config     limit to these configs (e.g. tmux bash nvim); default all
 EOF
     exit 1 ;;
 esac
